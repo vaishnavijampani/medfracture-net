@@ -1,0 +1,19 @@
+# Python & Virtual Envs
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+
+# PyTorch Checkpoints & Datasets
+checkpoints/best_model.pth
+!checkpoints/best_model_fp16.pth
+outputs/temp_annotated.jpg
+
+# VS Code, Office & OS files
+.vscode/
+.DS_Store
+Thumbs.db
+~$*
+*.tmp
