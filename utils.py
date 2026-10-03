@@ -119,34 +119,90 @@ def compute_empirical_clinical_metrics(y_true, y_probs, y_preds=None, threshold=
     }
 
 def calculate_metrics(pred_mask: torch.Tensor, target_mask: torch.Tensor, threshold=0.5):
-    """Computes Dice Score, IoU, Precision, Recall, and F1-Score on segmentation masks."""
+    """
+    Computes per-image and aggregate Dice Score, IoU, Precision, Recall, and empty-mask statistics.
+    Evaluates lesion-level segmentation quality rather than batch-flattened background bias.
+    """
     pred_binary = (pred_mask > threshold).float()
-    pred_flat = pred_binary.view(-1)
-    target_flat = target_mask.view(-1)
-
-    intersection = (pred_flat * target_flat).sum().item()
-    total_pred = pred_flat.sum().item()
-    total_target = target_flat.sum().item()
-
-    dice = (2.0 * intersection + 1e-6) / (total_pred + total_target + 1e-6)
-    union = total_pred + total_target - intersection
-    iou = (intersection + 1e-6) / (union + 1e-6)
+    batch_size = pred_mask.size(0)
     
-    precision = (intersection + 1e-6) / (total_pred + 1e-6)
-    recall = (intersection + 1e-6) / (total_target + 1e-6)
-    f1 = 2 * (precision * recall) / (precision + recall + 1e-6)
+    dice_list = []
+    iou_list = []
+    prec_list = []
+    rec_list = []
+    empty_target_count = 0
+
+    for b in range(batch_size):
+        p_flat = pred_binary[b].view(-1)
+        t_flat = target_mask[b].view(-1)
+        
+        t_sum = t_flat.sum().item()
+        p_sum = p_flat.sum().item()
+        intersection = (p_flat * t_flat).sum().item()
+
+        if t_sum == 0:
+            empty_target_count += 1
+            if p_sum == 0:
+                dice_list.append(1.0)
+                iou_list.append(1.0)
+                prec_list.append(1.0)
+                rec_list.append(1.0)
+            else:
+                dice_list.append(0.0)
+                iou_list.append(0.0)
+                prec_list.append(0.0)
+                rec_list.append(1.0)
+        else:
+            d = (2.0 * intersection + 1e-6) / (p_sum + t_sum + 1e-6)
+            u = p_sum + t_sum - intersection
+            i = (intersection + 1e-6) / (u + 1e-6)
+            pr = (intersection + 1e-6) / (p_sum + 1e-6)
+            rc = (intersection + 1e-6) / (t_sum + 1e-6)
+            dice_list.append(d)
+            iou_list.append(i)
+            prec_list.append(pr)
+            rec_list.append(rc)
 
     return {
-        'dice': dice,
-        'iou': iou,
-        'precision': precision,
-        'recall': recall,
-        'f1': f1
+        'dice': float(np.mean(dice_list)),
+        'dice_median': float(np.median(dice_list)),
+        'iou': float(np.mean(iou_list)),
+        'iou_median': float(np.median(iou_list)),
+        'precision': float(np.mean(prec_list)),
+        'recall': float(np.mean(rec_list)),
+        'empty_mask_pct': round((empty_target_count / max(1, batch_size)) * 100.0, 1),
+        'per_image_dice': dice_list
     }
+
+def classify_fracture_morphology(length_mm: float, angle_deg: float, num_contours: int = 1, aspect_ratio: float = 1.0):
+    """
+    Orthopedic morphology classification engine based on crack geometry:
+    - Transverse: angle ~ 90 deg (+/- 20 deg) across the cortical shaft
+    - Oblique: angle between 25 deg and 70 deg
+    - Comminuted: multi-fragment (>2 separated crack components)
+    - Spiral: twisting high aspect ratio contour
+    - Hairline: micro-fissure with length <= 3.0 mm and sub-millimeter displacement
+    """
+    if num_contours >= 3:
+        return "Comminuted", "Multi-fragmentary cortical disruption with separated osteal pieces"
+    if length_mm <= 3.0:
+        return "Hairline", "Non-displaced micro-trabecular fracture line without cortical shift"
+    if 70.0 <= angle_deg <= 110.0:
+        return "Transverse", "Perpendicular transverse fracture line across the osseous axis"
+    if 25.0 <= angle_deg < 70.0:
+        return "Oblique", "Angular oblique fracture plane traversing cortical boundaries"
+    if aspect_ratio > 2.8:
+        return "Spiral", "Torsional helical fracture line indicative of rotational trauma"
+    return "Oblique", "Angular fracture plane traversing the cortical bone architecture"
 
 def estimate_severity(mask: np.ndarray, pixel_spacing_mm: float = config.PIXEL_SPACING_MM):
     """
-    Estimates physical fracture length in millimeters, orientation angle, and severity grade.
+    Estimates physical fracture length in millimeters, orientation angle, severity grade,
+    and geometric morphological fracture subtype.
+    
+    Calibration Note: Uses default spatial calibration factor (0.15 mm/px for demonstration radiographs;
+    for DICOM, calibrate using tag (0028, 0030) ImagerPixelSpacing). Thresholds (Mild: <=5mm, Moderate: 5-15mm,
+    Severe: >15mm) are heuristic prototype criteria.
     """
     mask_uint8 = (mask > 0.3).astype(np.uint8) * 255
     contours, _ = cv2.findContours(mask_uint8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -169,6 +225,8 @@ def estimate_severity(mask: np.ndarray, pixel_spacing_mm: float = config.PIXEL_S
     # Major axis length & inclination angle
     width_px, height_px = rect[1]
     length_pixels = max(width_px, height_px)
+    short_pixels = max(1.0, min(width_px, height_px))
+    aspect_ratio = length_pixels / short_pixels
     angle = rect[2]
     if width_px < height_px:
         angle = 90.0 + angle

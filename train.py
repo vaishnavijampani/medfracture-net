@@ -31,11 +31,9 @@ def train_one_epoch(model, train_loader, seg_loader, optimizer_backbone, optimiz
     bce_loss_fn = nn.BCEWithLogitsLoss()
     ce_loss_fn = nn.CrossEntropyLoss()
 
-    # Phase 1: Sub-pixel U-Net++ Segmenter Update on Annotated Radiograph Cohort
+    # Phase 1: Sub-pixel U-Net++ Segmenter Update on Full Annotated Radiograph Cohort
     if seg_loader and len(seg_loader) > 0:
-        for s_idx, seg_batch in enumerate(seg_loader):
-            if s_idx >= 3:
-                break
+        for seg_batch in seg_loader:
             seg_imgs = seg_batch['image'].to(device)
             seg_masks = seg_batch['mask'].to(device)
             

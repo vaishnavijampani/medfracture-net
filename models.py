@@ -111,15 +111,20 @@ class FractureMultiTaskNet(nn.Module):
         mask_pred = self.segmenter(x)
         features = self.backbone(x)
         class_logits = self.classifier(features)
-        detection_score = torch.sigmoid(self.detector(features))
+        det_logits = self.detector(features)  # Raw logits for numerically stable BCEWithLogitsLoss
         return {
             'mask': mask_pred,
             'logits': class_logits,
-            'detection': detection_score
+            'det_logits': det_logits,
+            'detection': torch.sigmoid(det_logits)  # Probability for inference and downstream evaluation
         }
 
 class GradCAMExplainer:
-    """Grad-CAM visual explainer for medical interpretability."""
+    """
+    Visual Explainability Engine supporting both Standard Grad-CAM and Grad-CAM++.
+    Grad-CAM++ (Chattopadhay et al., 2018) calculates higher-order partial derivative weights
+    to capture multi-instance fracture focal points and micro-crack regions.
+    """
     def __init__(self, model):
         self.model = model
         self.model.eval()
@@ -137,7 +142,7 @@ class GradCAMExplainer:
     def save_gradient(self, module, grad_input, grad_output):
         self.gradients = grad_output[0]
 
-    def generate_heatmap(self, input_tensor, class_idx=None):
+    def generate_heatmap(self, input_tensor, class_idx=None, method="gradcam++"):
         self.model.zero_grad()
         output = self.model(input_tensor)
         logits = output['logits']
@@ -151,14 +156,31 @@ class GradCAMExplainer:
         if self.gradients is None or self.activations is None:
             return np.zeros((input_tensor.shape[2], input_tensor.shape[3]), dtype=np.float32)
 
-        gradients = self.gradients.detach().cpu().numpy()[0]
-        activations = self.activations.detach().cpu().numpy()[0]
+        grads = self.gradients.detach().cpu().numpy()[0] # (C, H, W)
+        acts = self.activations.detach().cpu().numpy()[0] # (C, H, W)
 
-        weights = np.mean(gradients, axis=(1, 2))
-        cam = np.zeros(activations.shape[1:], dtype=np.float32)
+        if method.lower() == "gradcam++":
+            # True Grad-CAM++ formulation:
+            # alpha_k = grads^2 / (2 * grads^2 + sum(acts * grads^3) + eps)
+            # w_k = sum_ij(alpha_k * relu(grads))
+            grads_power_2 = grads ** 2
+            grads_power_3 = grads ** 3
+            sum_acts = np.sum(acts, axis=(1, 2), keepdims=True)
+            eps = 1e-7
 
+            denom = 2.0 * grads_power_2 + sum_acts * grads_power_3 + eps
+            denom = np.where(denom == 0.0, eps, denom)
+            alphas = grads_power_2 / denom
+
+            rel_grads = np.maximum(grads, 0)
+            weights = np.sum(alphas * rel_grads, axis=(1, 2))
+        else:
+            # Standard Grad-CAM: Global average pooling over spatial gradients
+            weights = np.mean(grads, axis=(1, 2))
+
+        cam = np.zeros(acts.shape[1:], dtype=np.float32)
         for i, w in enumerate(weights):
-            cam += w * activations[i, :, :]
+            cam += w * acts[i, :, :]
 
         cam = np.maximum(cam, 0)
         if cam.max() > 0:

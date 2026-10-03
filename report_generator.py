@@ -64,9 +64,9 @@ class DiagnosticReportGenerator:
 
             elements = []
             
-            # 1. Institutional Banner
-            elements.append(Paragraph("<b>DEPARTMENT OF RADIOLOGY & ORTHOPEDIC ONCOLOGY</b>", title_style))
-            elements.append(Paragraph("<b>MedFracture-Net Clinical Decision Support System | Automated AI Radiographic Assessment</b>", sub_style))
+            # 1. Prototype Header Banner
+            elements.append(Paragraph("<b>MEDFRACTURE-NET RESEARCH DECISION SUPPORT SYSTEM</b>", title_style))
+            elements.append(Paragraph("<b>Automated Radiographic Fracture Detection, Segmentation, and Severity Assessment</b>", sub_style))
             elements.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#2B6CB0"), spaceAfter=10))
 
             # 2. Study & Demographics Header Table
@@ -147,7 +147,7 @@ class DiagnosticReportGenerator:
 
             # Sign-off footer
             sign_data = [
-                [Paragraph("<b>AI Model Certification:</b> MedFracture-Net v2.4 (IEEE Verified)", body_style), Paragraph("<b>Attending Radiologist:</b> Digital Verification Stamped [OK]", body_style)]
+                [Paragraph("<b>Model Architecture:</b> MedFracture-Net (ResNet-34 + Nested U-Net++)", body_style), Paragraph("<b>Disclaimer:</b> Research Prototype / Investigational Use Only", body_style)]
             ]
             sign_table = Table(sign_data, colWidths=[270, 270])
             sign_table.setStyle(TableStyle([

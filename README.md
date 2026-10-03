@@ -7,7 +7,7 @@
 [![AUC-ROC](https://img.shields.io/badge/ROC--AUC-0.9998-success.svg)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-An institutional-grade, research-ready Deep Learning framework for automated radiographic bone fracture diagnosis. **MedFracture-Net** unifies **Nested U-Net++** semantic crack segmentation, **ResNet-34** residual morphological classification, **Grad-CAM++** visual explainability, and automated millimeter severity quantification into a clinical web workstation.
+An open-source multi-task deep learning framework and research prototype developed as a B.Tech Computer Science & Engineering capstone project. **MedFracture-Net** unifies **Nested U-Net++** semantic crack segmentation, **ResNet-34** residual feature representation, **Grad-CAM++** visual explainability, and automated geometric severity quantification into an interactive clinical decision-support demonstrator.
 
 ---
 
@@ -128,13 +128,14 @@ python create_presentation.py
 
 ## 📄 License & Citation
 
-This project is licensed under the MIT License. If you use MedFracture-Net in your research or project, please cite:
+This project is licensed under the MIT License. If you use MedFracture-Net in your work or academic research, please cite:
 
 ```bibtex
-@article{medfracturenet2026,
+@misc{medfracturenet2026,
   title={MedFracture-Net: A Multi-Task Deep Learning Framework for Bone Fracture Detection, Localization, and Severity Assessment},
-  author={Final Year Research Team},
-  journal={IEEE Transactions on Medical Imaging Prototype},
+  author={B.Tech Capstone Research Team},
+  howpublished={\url{https://github.com/vaishnavijampani/medfracture-net}},
   year={2026}
 }
 ```
+

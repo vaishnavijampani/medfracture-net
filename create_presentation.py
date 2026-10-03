@@ -20,7 +20,7 @@ def create_deck():
 
     blank_layout = prs.slide_layouts[6]
 
-    def add_header(slide, title_text, category_text="IEEE RESEARCH PROTOTYPE DEMONSTRATION"):
+    def add_header(slide, title_text, category_text="B.TECH CAPSTONE RESEARCH DEMONSTRATION"):
         shape = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0), Inches(0), Inches(13.33), Inches(1.1))
         shape.fill.solid()
         shape.fill.fore_color.rgb = NAVY
@@ -68,7 +68,7 @@ def create_deck():
     p1.space_before = Pt(10)
 
     p2 = tf.add_paragraph()
-    p2.text = "IEEE Transactions on Medical Imaging Target Architecture"
+    p2.text = "Computer Vision & Medical Deep Learning Decision Support Architecture"
     p2.font.size = Pt(16)
     p2.font.color.rgb = RGBColor(226, 232, 240)
     p2.space_before = Pt(15)
