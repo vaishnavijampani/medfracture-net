@@ -1,0 +1,40 @@
+{
+  "archive_1_zip": {
+    "dataset_name": "Kaggle Bone Fracture Radiographs (archive (1).zip)",
+    "total_images": 10157,
+    "split_counts": {
+      "test": 399,
+      "train": 8863,
+      "val": 895
+    },
+    "unique_cases_per_split": {
+      "test": 80,
+      "train": 118,
+      "val": 60
+    },
+    "total_unique_patients": 121,
+    "train_val_case_overlap": 57,
+    "train_test_case_overlap": 77,
+    "val_patient_leakage_rate_pct": 95.0,
+    "test_patient_leakage_rate_pct": 96.25,
+    "verdict": "CRITICAL_DATA_LEAKAGE: 96.25% of test patients exist in the training set due to naive rotation splitting."
+  },
+  "yolo_dataset": {
+    "dataset_name": "Roboflow YOLOv8 Fracture Dataset",
+    "split_counts": {
+      "train": 3631,
+      "valid": 348,
+      "test": 169
+    },
+    "unique_cases_per_split": {
+      "train": 1002,
+      "valid": 333,
+      "test": 168
+    },
+    "train_val_case_overlap": 98,
+    "train_test_case_overlap": 54,
+    "val_case_leakage_rate_pct": 29.43,
+    "test_case_leakage_rate_pct": 32.14,
+    "verdict": "MODERATE_DATA_LEAKAGE: Augmented variants of identical lesion bases present across splits."
+  }
+}

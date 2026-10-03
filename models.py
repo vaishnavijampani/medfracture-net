@@ -81,14 +81,20 @@ class FractureMultiTaskNet(nn.Module):
     """
     Multi-Task Deep Learning Model:
     1. U-Net++ Segmenter for spatial fracture masking.
-    2. ResNet Backboned Classifier for 6-class Fracture Typing.
+    2. ResNet Backboned Classifier for 6-class Fracture Typing and binary detection.
+    Supports ImageNet transfer learning (pretrained=True) or from-scratch random initialization (pretrained=False).
     """
-    def __init__(self, num_classes=config.NUM_CLASSES):
+    def __init__(self, num_classes=config.NUM_CLASSES, pretrained=True):
         super().__init__()
+        self.pretrained = pretrained
         self.segmenter = FractureUNetPlusPlus(in_channels=3, out_channels=1)
         
-        # Classification Backbone
-        self.backbone = torchvision_models.resnet34(weights=torchvision_models.ResNet34_Weights.DEFAULT)
+        # Classification Backbone (Transfer Learning vs Ablation Scratch)
+        if pretrained:
+            self.backbone = torchvision_models.resnet34(weights=torchvision_models.ResNet34_Weights.DEFAULT)
+        else:
+            self.backbone = torchvision_models.resnet34(weights=None)
+            
         num_ftrs = self.backbone.fc.in_features
         self.backbone.fc = nn.Identity()
         
@@ -132,6 +138,7 @@ class GradCAMExplainer:
         self.gradients = grad_output[0]
 
     def generate_heatmap(self, input_tensor, class_idx=None):
+        self.model.zero_grad()
         output = self.model(input_tensor)
         logits = output['logits']
         
@@ -139,19 +146,21 @@ class GradCAMExplainer:
             class_idx = torch.argmax(logits, dim=1).item()
             
         score = logits[0, class_idx]
-        self.model.zero_grad()
-        score.backward()
+        score.backward(retain_graph=True)
 
-        gradients = self.gradients.cpu().data.numpy()[0]
-        activations = self.activations.cpu().data.numpy()[0]
+        if self.gradients is None or self.activations is None:
+            return np.zeros((input_tensor.shape[2], input_tensor.shape[3]), dtype=np.float32)
 
-        weights = torch.mean(torch.tensor(gradients), dim=(1, 2)).numpy()
-        cam = torch.zeros(activations.shape[1:], dtype=torch.float32).numpy()
+        gradients = self.gradients.detach().cpu().numpy()[0]
+        activations = self.activations.detach().cpu().numpy()[0]
+
+        weights = np.mean(gradients, axis=(1, 2))
+        cam = np.zeros(activations.shape[1:], dtype=np.float32)
 
         for i, w in enumerate(weights):
             cam += w * activations[i, :, :]
 
-        cam = torch.clamp(torch.tensor(cam), min=0).numpy()
+        cam = np.maximum(cam, 0)
         if cam.max() > 0:
             cam = cam / cam.max()
         return cam

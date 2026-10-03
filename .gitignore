@@ -10,6 +10,7 @@ ENV/
 checkpoints/best_model.pth
 !checkpoints/best_model_fp16.pth
 outputs/temp_annotated.jpg
+outputs/temp_cam.jpg
 
 # VS Code, Office & OS files
 .vscode/

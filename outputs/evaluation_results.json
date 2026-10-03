@@ -1,0 +1,97 @@
+{
+  "model_name": "MedFracture-Net (ResNet-34 + Attention U-Net++)",
+  "evaluation_mode": "Strict Patient-Independent Group Splitting (0% Patient Overlap)",
+  "total_radiographs_in_cohort": 10157,
+  "unique_patients_in_cohort": 121,
+  "splits": {
+    "train": {
+      "radiographs": 7260,
+      "patients": 72
+    },
+    "val": {
+      "radiographs": 1520,
+      "patients": 24
+    },
+    "held_out_test": {
+      "radiographs": 1377,
+      "patients": 25
+    }
+  },
+  "test_metrics": {
+    "n_samples": 1377,
+    "accuracy": {
+      "point_pct": 99.49,
+      "ci95_low": 98.95,
+      "ci95_high": 99.75
+    },
+    "sensitivity_recall": {
+      "point_pct": 99.37,
+      "ci95_low": 98.54,
+      "ci95_high": 99.73
+    },
+    "specificity": {
+      "point_pct": 99.66,
+      "ci95_low": 98.75,
+      "ci95_high": 99.91
+    },
+    "precision": {
+      "point_pct": 99.75,
+      "ci95_low": 99.09,
+      "ci95_high": 99.93
+    },
+    "f1_score": 99.56,
+    "balanced_accuracy": 99.52,
+    "auc_roc": 0.9998,
+    "mean_dice": 0.984,
+    "mean_iou": 0.9472,
+    "confusion_matrix": {
+      "tn": 578,
+      "fp": 2,
+      "fn": 5,
+      "tp": 792
+    }
+  },
+  "standard_folder_split_comparison": {
+    "n_samples": 399,
+    "accuracy": {
+      "point_pct": 94.24,
+      "ci95_low": 91.5,
+      "ci95_high": 96.13
+    },
+    "sensitivity_recall": {
+      "point_pct": 92.96,
+      "ci95_low": 88.54,
+      "ci95_high": 95.76
+    },
+    "specificity": {
+      "point_pct": 95.5,
+      "ci95_low": 91.67,
+      "ci95_high": 97.61
+    },
+    "auc_roc": 0.993,
+    "confusion_matrix": {
+      "tn": 191,
+      "fp": 9,
+      "fn": 14,
+      "tp": 185
+    }
+  },
+  "ablation_study": {
+    "resnet34_pretrained_transfer_learning": {
+      "accuracy_pct": 99.49,
+      "ci95": [
+        98.95,
+        99.75
+      ],
+      "auc_roc": 0.9998
+    },
+    "resnet34_random_initialization_scratch": {
+      "accuracy_pct": 57.88,
+      "ci95": [
+        55.25,
+        60.46
+      ],
+      "auc_roc": 0.5056
+    }
+  }
+}

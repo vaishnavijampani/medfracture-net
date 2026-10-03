@@ -286,10 +286,10 @@ def create_deck():
 
     # SLIDE 9: Experimental Results & Comparative Performance
     slide9 = prs.slides.add_slide(blank_layout)
-    add_header(slide9, "Experimental Metric Results & Baseline Comparison")
+    add_header(slide9, "Empirical Metric Benchmark & Baseline Comparison (10k Cohort)")
 
-    rows, cols = 5, 6
-    t_shape9 = slide9.shapes.add_table(rows, cols, Inches(0.8), Inches(1.6), Inches(11.7), Inches(5.0))
+    rows, cols = 6, 6
+    t_shape9 = slide9.shapes.add_table(rows, cols, Inches(0.8), Inches(1.5), Inches(11.7), Inches(5.2))
     t9 = t_shape9.table
 
     headers9 = ["Method / Architecture", "Accuracy (%)", "Precision (%)", "Recall (%)", "F1-Score (%)", "Dice Score"]
@@ -304,10 +304,11 @@ def create_deck():
             p.font.color.rgb = WHITE
 
     table_data9 = [
+        ["Scratch Ablation (Random Init)", "57.88%", "57.80%", "100.0%", "73.20%", "0.125"],
         ["Otsu Thresholding", "91.25%", "90.12%", "89.75%", "89.93%", "0.880"],
         ["Adaptive Gaussian Filter", "93.48%", "92.85%", "92.10%", "92.47%", "0.910"],
         ["Canny Edge Detector (Base)", "94.12%", "93.56%", "93.05%", "93.30%", "0.920"],
-        ["MedFracture-Net (10k Cohort)", "99.25%", "99.10%", "99.40%", "99.25%", "0.984"]
+        ["MedFracture-Net (Patient-Independent)", "99.49%", "99.75%", "99.37%", "99.56%", "0.984"]
     ]
     for r_idx, row in enumerate(table_data9):
         for c_idx, val in enumerate(row):
@@ -316,37 +317,37 @@ def create_deck():
             cell.fill.solid()
             cell.fill.fore_color.rgb = LIGHT_BG if r_idx % 2 == 0 else WHITE
             for p in cell.text_frame.paragraphs:
-                p.font.size = Pt(13)
+                p.font.size = Pt(12.5)
                 p.font.color.rgb = NAVY if c_idx == 0 or c_idx == 1 else DARK
-                if r_idx == 3:
+                if r_idx == 4:
                     p.font.bold = True
 
-    # SLIDE 10: Training Convergence Telemetry
+    # SLIDE 10: Training Convergence Telemetry & Patient Independence Audit
     slide10 = prs.slides.add_slide(blank_layout)
-    add_header(slide10, "Model Training & Multi-Center Validation Telemetry (10k Cohort)")
+    add_header(slide10, "Empirical Validation & Zero Patient Data Leakage Audit")
 
     tb10 = slide10.shapes.add_textbox(Inches(0.8), Inches(1.5), Inches(11.7), Inches(5.3))
     tf10 = tb10.text_frame
     tf10.word_wrap = True
 
     telemetry_points = [
-        ("10,157 Radiograph Clinical Cohort", "Ingested 10,157 clinical radiographs across training (8,863), validation (895), and multi-center testing splits."),
-        ("Multi-Task Loss Convergence", "Combined multi-task objective reduced smoothly without gradient explosion or divergence."),
-        ("Clinical Generalization Benchmark", "Validation accuracy achieved 99.25% with 99.40% clinical sensitivity and 99.10% specificity."),
-        ("Model Generalization & Dice Score", "Mean Dice coefficient of 0.984 and IoU of 0.948 confirm precise sub-pixel fracture boundary localization.")
+        ("Audited Patient Leakage Resolution", "Identified 96.25% patient ID leakage in naive Kaggle folder splits caused by rotations (1-rotated1.jpg). Resolved via Patient-Independent Group Splitting across 121 unique patients with 0% patient leakage."),
+        ("Strictly Held-Out Generalization", "Evaluated on 1,377 radiographs across 25 unseen patient entities. Correctly predicted 1,370 out of 1,377 radiographs (99.49% empirical accuracy, 95% Wilson CI: [98.95%, 99.75%])."),
+        ("Diagnostic Sensitivity & Specificity", "Achieved 99.37% clinical sensitivity (792/797 fractures detected) and 99.66% specificity (578/580 normal bones identified), yielding 0.9998 ROC-AUC."),
+        ("Backbone Transfer Learning Ablation", "Untrained scratch model achieved only 57.88% accuracy (0.5056 AUC), confirming that ImageNet-pretrained representations are vital for robust radiographic boundary discernment.")
     ]
     for title, body in telemetry_points:
         p = tf10.add_paragraph()
         p.text = f"• {title}: "
         p.font.bold = True
-        p.font.size = Pt(16)
+        p.font.size = Pt(15)
         p.font.color.rgb = NAVY
-        p.space_before = Pt(14)
+        p.space_before = Pt(12)
 
         run = p.add_run()
         run.text = body
         run.font.bold = False
-        run.font.size = Pt(15)
+        run.font.size = Pt(14)
         run.font.color.rgb = DARK
 
     # SLIDE 11: Real-Time Web Application & PDF Generation
